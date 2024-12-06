@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
             WattsAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "Android",
+                        name = "Biaatch",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
