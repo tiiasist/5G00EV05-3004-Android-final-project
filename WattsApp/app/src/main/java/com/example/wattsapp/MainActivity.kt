@@ -1,5 +1,6 @@
 package com.example.wattsapp
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -21,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,6 +33,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.wattsapp.ui.theme.WattsAppTheme
+import android.net.Uri
+import androidx.compose.foundation.layout.Spacer
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -144,20 +148,51 @@ fun Page2(navController: NavHostController) {
     }
 }
 
+
 @Composable
 fun Page3(navController: NavHostController) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = " About DATA",
+            text = " Data behind the app",
             textAlign = TextAlign.Center,
             fontSize = 30.sp,
-            modifier = Modifier.fillMaxSize()
-                .padding(16.dp)
-
+            modifier =  Modifier.padding(16.dp)
         )
+        Spacer(modifier = Modifier.padding(30.dp))
+        Text(
+            text = "WattsApp uses data from Porssisahko API, wich provides electricity prices in Finland",
+            textAlign = TextAlign.Center,
+            fontSize = 20.sp,
+            modifier =  Modifier.padding(16.dp)
+        )
+        Button(onClick = {
+            val intentBrowserMain = Intent(Intent.ACTION_VIEW,
+                Uri.parse("https://www.porssisahko.net/api"))
+            context.startActivity(intentBrowserMain)
+            }
+            ) {
+            Text(text = "API main page")
+        }
+        Spacer(modifier = Modifier.padding(25.dp))
+        Text(
+            text = "The latest prices are available in JSON format. Tomorrows prices are available after 14:15",
+            textAlign = TextAlign.Center,
+            fontSize = 20.sp,
+            modifier =  Modifier.padding(16.dp)
+        )
+        Button(onClick = {
+            val intentBrowserDataJSON = Intent(Intent.ACTION_VIEW,
+                Uri.parse("https://api.porssisahko.net/v1/latest-prices.json"))
+            context.startActivity(intentBrowserDataJSON)
+        }
+        ) {
+            Text(text = "Data in JSON")
+        }
+
     }
 }
