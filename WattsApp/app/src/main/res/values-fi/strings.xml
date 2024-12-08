@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="title_data_page">Data sovelluksen taustalla</string>
+    <string name="api_main_page_button">API:n etusivu</string>
+    <string name="data_in_json_button">Data JSON-muodossa</string>
+    <string name="home_nav_button">Koti</string>
+    <string name="counter_nav_button">Laskuri</string>
+    <string name="wattsapp_uses_data_from_porssisahko_api_wich_provides_electricity_prices_in_finland">WattsApp saa hintatietonsa Pörssisähkö-API:lta</string>
+    <string name="the_latest_prices_are_available_in_json_format_tomorrows_prices_are_available_after_14_15">Viimeisimmät hintatiedot ovat saatavilla JSON-muodossa. Seuraavan päivän hinnat päivittyvät klo 14.15 alkaen.</string>
+    <string name="home_title">Sähkön hinta tänään</string>
+    <string name="calculator_page_title">Laske sähkölaskusi</string>
+</resources>

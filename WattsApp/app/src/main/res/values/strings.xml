@@ -1,3 +1,13 @@
 <resources>
-    <string name="app_name">WattsApp</string>
+    <string name="app_name" translatable="false">WattsApp</string>
+    <string name="wattsapp_uses_data_from_porssisahko_api_wich_provides_electricity_prices_in_finland">WattsApp uses data from Porssisahko API, wich provides electricity prices in Finland</string>
+    <string name="title_data_page">" Data behind the app"</string>
+    <string name="the_latest_prices_are_available_in_json_format_tomorrows_prices_are_available_after_14_15">The latest prices are available in JSON format. Tomorrows prices are available after 14:15.</string>
+    <string name="api_main_page_button">API main page</string>
+    <string name="data_in_json_button">Data in JSON</string>
+    <string name="home_nav_button">Home</string>
+    <string name="counter_nav_button">Counter</string>
+    <string name="data_nav_button" translatable="false">Data</string>
+    <string name="home_title">" Electricity price today"</string>
+    <string name="calculator_page_title">" Count your electricity bill"</string>
 </resources>
