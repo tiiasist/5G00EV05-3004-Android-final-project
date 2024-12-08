@@ -1,5 +1,6 @@
 package com.example.wattsapp
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
