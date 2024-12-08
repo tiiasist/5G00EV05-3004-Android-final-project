@@ -39,6 +39,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.ui.res.stringResource
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.getValue
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -95,6 +102,9 @@ fun WattsApp() {
     val navController = rememberNavController()
 
     Scaffold(
+        topBar = {
+            TopBar(navController)
+        },
         bottomBar = {
             BottomNavigationBar(navController = navController)
         },
@@ -104,13 +114,13 @@ fun WattsApp() {
                 startDestination = "page1",
                 modifier = Modifier.padding(innerPadding) // Apply the innerPadding here
             ) {
-                composable("page1") {
+                composable("page1") {// Home
                     Page1(navController)
                 }
-                composable("page2") {
+                composable("page2") {// Calculator
                     Page2(navController)
                 }
-                composable("page3") {
+                composable("page3") {// Data
                     Page3(navController)
                 }
             }
@@ -119,32 +129,86 @@ fun WattsApp() {
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopBar(navController: NavHostController) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val title = when (currentRoute) {
+        "page1" -> stringResource(R.string.home_title)
+        "page2" -> stringResource(R.string.calculator_page_title)
+        "page3" -> stringResource(R.string.title_data_page)
+        else -> stringResource(R.string.app_name)
+    }
+
+    TopAppBar(
+        title = {
+            Text(text = title,
+                textAlign = TextAlign.Center,
+                fontSize = 30.sp,
+                modifier = Modifier.padding(16.dp)
+            )
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            titleContentColor = MaterialTheme.colorScheme.onPrimary
+        )
+    )
+
+}
+
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     NavigationBar {
-        NavigationBarItem( // Home
+        NavigationBarItem(
             icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
-            label = { Text("Home") },
-            selected = navController.currentDestination?.route == "page1",
+            label = { Text(stringResource(R.string.home_nav_button)) },
+            selected = currentRoute == "page1",
             onClick = {
-                navController.navigate("page1")
-            }
-        )
-        NavigationBarItem( // Calculate
-            icon = {Icon(painter = painterResource(id = R.drawable.baseline_calculate_24), contentDescription = "Calculate")},
-            label = {Text("Counter")},
-            selected = navController.currentDestination?.route == "page2",
-            onClick = {
-                navController.navigate("page2")
+                navController.navigate("page1") {
+                    popUpTo(navController.graph.startDestinationId) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
             }
         )
         NavigationBarItem(
-            icon = {Icon(painter = painterResource(id = R.drawable.baseline_data_object_24), contentDescription = "Data")},
-            label = {Text("Data")},
-            selected = navController.currentDestination?.route == "page3",
+            icon = { Icon(painter = painterResource(id = R.drawable.baseline_calculate_24), contentDescription = "Calculate") },
+            label = { Text(stringResource(R.string.counter_nav_button)) },
+            selected = currentRoute == "page2",
             onClick = {
-                navController.navigate("page3")
+                navController.navigate("page2") {
+                    popUpTo(navController.graph.startDestinationId) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
             }
+        )
+        NavigationBarItem(
+            icon = { Icon(painter = painterResource(id = R.drawable.baseline_data_object_24), contentDescription = "Data") },
+            label = { Text(stringResource(R.string.data_nav_button)) },
+            selected = currentRoute == "page3",
+            onClick = {
+                navController.navigate("page3") {
+                    popUpTo(navController.graph.startDestinationId) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurface
+            )
         )
     }
 }
@@ -505,14 +569,6 @@ fun Page2(navController: NavHostController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = " Count your electricity bill",
-            textAlign = TextAlign.Center,
-            fontSize = 30.sp,
-            modifier = Modifier.fillMaxSize()
-                .padding(16.dp)
-
-        )
     }
 }
 
@@ -525,15 +581,9 @@ fun Page3(navController: NavHostController) {
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = " Data behind the app",
-            textAlign = TextAlign.Center,
-            fontSize = 30.sp,
-            modifier =  Modifier.padding(16.dp)
-        )
         Spacer(modifier = Modifier.padding(30.dp))
         Text(
-            text = "WattsApp uses data from Porssisahko API, wich provides electricity prices in Finland",
+            text = stringResource(R.string.wattsapp_uses_data_from_porssisahko_api_wich_provides_electricity_prices_in_finland),
             textAlign = TextAlign.Center,
             fontSize = 20.sp,
             modifier =  Modifier.padding(16.dp)
@@ -548,11 +598,11 @@ fun Page3(navController: NavHostController) {
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
             ) {
-            Text(text = "API main page")
+            Text(text = stringResource(R.string.api_main_page_button))
         }
         Spacer(modifier = Modifier.padding(25.dp))
         Text(
-            text = "The latest prices are available in JSON format. Tomorrows prices are available after 14:15",
+            text = stringResource(R.string.the_latest_prices_are_available_in_json_format_tomorrows_prices_are_available_after_14_15),
             textAlign = TextAlign.Center,
             fontSize = 20.sp,
             modifier =  Modifier.padding(16.dp)
@@ -567,7 +617,7 @@ fun Page3(navController: NavHostController) {
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         ) {
-            Text(text = "Data in JSON")
+            Text(text = stringResource(R.string.data_in_json_button))
         }
 
     }
