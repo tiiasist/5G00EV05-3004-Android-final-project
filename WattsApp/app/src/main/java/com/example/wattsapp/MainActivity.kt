@@ -34,6 +34,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.wattsapp.ui.theme.WattsAppTheme
 import android.net.Uri
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.res.stringResource
@@ -42,6 +45,43 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.getValue
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.*
+import androidx.compose.ui.draw.clip
+import kotlinx.coroutines.launch
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
+import com.example.wattsapp.ui.theme.errorContainerLight
+import com.example.wattsapp.ui.theme.primaryContainerDark
+import com.example.wattsapp.ui.theme.primaryContainerLight
+import com.example.wattsapp.ui.theme.primaryLight
+import com.example.wattsapp.ui.theme.secondaryLight
+import com.example.wattsapp.ui.theme.tertiaryContainerLight
+import kotlin.math.roundToInt
+
+const val BASE_URL = "https://api.porssisahko.net/"
+const val LATEST_PRICES_ENDPOINT = "v1/latest-prices.json"
+const val API_MAIN_PAGE_URL = "https://www.porssisahko.net/api"
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -173,16 +213,351 @@ fun BottomNavigationBar(navController: NavHostController) {
 }
 
 // First page for home screen
+@SuppressLint("DefaultLocale")
 @Composable
 fun Page1(navController: NavHostController) {
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    var prices: List<Price> by remember { mutableStateOf(emptyList()) }
+    var loading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            try {
+                val response = RetrofitInstance.api.getPrices()
+                prices = response.prices
+                loading = false
+            } catch (e: Exception) {
+                error = e.message
+                loading = false
+            }
+        }
+    }
+
+    if (loading) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "Loading price data...")
+        }
+    } else if (error != null) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "Error: $error")
+        }
+    } else {
+
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(32.dp))
+
+            BarChart(prices = prices)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+
+                        //.border(1.dp, MaterialTheme.colorScheme.onBackground)
+                        ,
+                        horizontalArrangement = Arrangement.spacedBy(1.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .background(MaterialTheme.colorScheme.tertiaryContainer)
+                        ) {
+                            Text(
+                                text = "Date",
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .background(MaterialTheme.colorScheme.tertiaryContainer)
+                        ) {
+                            Text(
+                                text = "Time",
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .background(MaterialTheme.colorScheme.tertiaryContainer)
+                        ) {
+                            Text(
+                                text = "Cent/kWh",
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(),
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                    }
+                }
+                items(prices) { price ->
+                    val zonedDateTime = ZonedDateTime.parse(price.startDate)
+                    val date = zonedDateTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                    val time = zonedDateTime.format(DateTimeFormatter.ofPattern("HH.mm"))
+                    val priceInCents = String.format("%.2f", price.price)
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 4.dp, top = 2.dp, end = 4.dp, bottom = 2.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                        //.background(MaterialTheme.colorScheme.primaryContainer)
+                        //.border(1.dp, MaterialTheme.colorScheme.onBackground)
+                        ,
+                        horizontalArrangement = Arrangement.spacedBy(1.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .background(MaterialTheme.colorScheme.primaryContainer)
+                        ) {
+                            Text(
+                                text = date,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .background(MaterialTheme.colorScheme.primaryContainer)
+                        ) {
+                            Text(
+                                text = time,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .background(MaterialTheme.colorScheme.primaryContainer)
+                        ) {
+                            Text(
+                                text = priceInCents,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .fillMaxWidth(),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
+
+data class Price(
+    val price: Double,
+    val startDate: String,
+    val endDate: String
+)
+
+data class PriceResponse(
+    val prices: List<Price>
+)
+
+interface ApiService {
+    @GET(LATEST_PRICES_ENDPOINT)
+    suspend fun getPrices(): PriceResponse
+}
+
+object RetrofitInstance {
+    val api: ApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
+    }
+}
+
+@SuppressLint("DefaultLocale")
+@Composable
+fun BarChart(prices: List<Price>) {
+    val currentTime = ZonedDateTime.now()
+    val startTime = currentTime.minusHours(4)
+    val endTime = startTime.plusHours(12)
+    val filteredPrices = prices.filter {
+        val priceTime = ZonedDateTime.parse(it.startDate)
+        priceTime.isAfter(startTime) && priceTime.isBefore(endTime)
+    }.sortedBy { ZonedDateTime.parse(it.startDate) }
+    val maxPrice = filteredPrices.maxOfOrNull { it.price } ?: 0.0
+    var selectedPrice by remember { mutableStateOf<Triple<Double, String, String>?>(null) }
+
+    Canvas(modifier = Modifier
+        .padding(start = 40.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)
+        .fillMaxWidth()
+        .height(200.dp)
+        .pointerInput(Unit) {
+            detectTapGestures { offset ->
+                val gap = 4.dp.toPx()
+                val barWidth = (size.width - gap * (filteredPrices.size - 1)) / filteredPrices.size
+                val index = (offset.x / (barWidth + gap)).toInt()
+                if (index in filteredPrices.indices) {
+                    val price = filteredPrices[index]
+                    val dateTime = ZonedDateTime.parse(price.startDate)
+                    val time = dateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+                    val date = dateTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                    selectedPrice = Triple(price.price, time, date)
+                }
+            }
+        }
+    ) {
+        val gap = 8.dp.toPx()
+        val barWidth = (size.width - gap * (filteredPrices.size - 1)) / filteredPrices.size
+        val yAxisInterval = maxPrice / 5
+
+        // Draw the bars first
+        filteredPrices.forEachIndexed { index, price ->
+            val barHeight = (price.price / maxPrice * size.height).toFloat()
+            val xOffset = index * (barWidth + gap)
+            var barColor = when {
+                price.price < 7 -> errorContainerLight
+                price.price < 14 -> primaryContainerLight
+                else -> secondaryLight
+            }
+
+            // Change the color opacity if the bar corresponds to the current time
+            val priceTime = ZonedDateTime.parse(price.startDate)
+            if (priceTime.hour == currentTime.hour) {
+                barColor = barColor.copy(alpha = 0.6f)
+            }
+
+            // Draw the filled bar
+            drawRect(
+                color = barColor,
+                topLeft = androidx.compose.ui.geometry.Offset(xOffset, size.height - barHeight),
+                size = androidx.compose.ui.geometry.Size(barWidth, barHeight)
+            )
+
+            // Draw a thin border if the bar corresponds to the current time
+            if (priceTime.hour == currentTime.hour) {
+                drawRect(
+                    color = Color.Black,
+                    topLeft = androidx.compose.ui.geometry.Offset(xOffset, size.height - barHeight),
+                    size = androidx.compose.ui.geometry.Size(barWidth, barHeight),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
+                )
+            }
+
+            // Draw x-axis labels
+            drawContext.canvas.nativeCanvas.drawText(
+                ZonedDateTime.parse(price.startDate).format(DateTimeFormatter.ofPattern("HH")),
+                xOffset,
+                size.height + 12.sp.toPx(),
+                android.graphics.Paint().apply {
+                    color = android.graphics.Color.BLACK
+                    textSize = 12.sp.toPx()
+                }
+            )
+        }
+
+        // Draw y-axis help lines and labels
+        for (i in 0..5) {
+            val y = size.height - (i * yAxisInterval / maxPrice * size.height).toFloat()
+            drawLine(
+                color = Color.Gray,
+                start = androidx.compose.ui.geometry.Offset(0f, y),
+                end = androidx.compose.ui.geometry.Offset(size.width, y),
+                strokeWidth = 1.dp.toPx()
+            )
+            val label = if (maxPrice >= 10) {
+                String.format("%.0f", i * yAxisInterval)
+            } else {
+                String.format("%.1f", i * yAxisInterval)
+            }
+            drawContext.canvas.nativeCanvas.drawText(
+                label,
+                -70f,
+                y,
+                android.graphics.Paint().apply {
+                    color = android.graphics.Color.BLACK
+                    textSize = 12.sp.toPx()
+                }
+            )
+        }
+    }
+
+//    Text(
+//        text = "CURRENT: $currentTime",
+//        modifier = Modifier
+//            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)
+//            .fillMaxWidth(),
+//        style = MaterialTheme.typography.bodyLarge,
+//        textAlign = TextAlign.Center
+//    )
+
+    // Display selected price, time, and date
+    selectedPrice?.let { (price, time, date) ->
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Selected Price: $price\nTime $time on $date",
+                modifier = Modifier
+                    .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)
+                    .fillMaxWidth(),
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+
+        }
+    }
+}
+
 
 // Second page for calculation of electricity bill
 @Composable
@@ -214,9 +589,13 @@ fun Page3(navController: NavHostController) {
         )
         Button(onClick = {
             val intentBrowserMain = Intent(Intent.ACTION_VIEW,
-                Uri.parse("https://www.porssisahko.net/api"))
+                Uri.parse(API_MAIN_PAGE_URL))
             context.startActivity(intentBrowserMain)
-            }
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
             ) {
             Text(text = stringResource(R.string.api_main_page_button))
         }
@@ -227,11 +606,15 @@ fun Page3(navController: NavHostController) {
             fontSize = 20.sp,
             modifier =  Modifier.padding(16.dp)
         )
-        Button(onClick = {
-            val intentBrowserDataJSON = Intent(Intent.ACTION_VIEW,
-                Uri.parse("https://api.porssisahko.net/v1/latest-prices.json"))
-            context.startActivity(intentBrowserDataJSON)
-        }
+        Button(
+            onClick = {
+                val intentBrowserDataJSON = Intent(Intent.ACTION_VIEW, Uri.parse(BASE_URL + LATEST_PRICES_ENDPOINT))
+                context.startActivity(intentBrowserDataJSON)
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         ) {
             Text(text = stringResource(R.string.data_in_json_button))
         }
