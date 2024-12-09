@@ -181,7 +181,7 @@ fun TopBar(navController: NavHostController, sharedPreferences: SharedPreference
                 Text(
                     text = title,
                     textAlign = TextAlign.Center,
-                    fontSize = 28.sp,
+                    fontSize = 25.sp,
                     modifier = Modifier.padding(16.dp)
                 )
                 Column(
@@ -197,7 +197,7 @@ fun TopBar(navController: NavHostController, sharedPreferences: SharedPreference
                         )
                         Text(
                             text = userName,
-                            fontSize = 20.sp,
+                            fontSize = 15.sp,
 
                         )
                     }
@@ -852,49 +852,49 @@ fun Page2(navController: NavHostController, viewModel: Page2ViewModel = viewMode
 fun Page3(navController: NavHostController) {
     val context = LocalContext.current
 
-    Column(
+    LazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.padding(30.dp))
-        Text(
-            text = stringResource(R.string.wattsapp_uses_data_from_porssisahko_api_wich_provides_electricity_prices_in_finland),
-            textAlign = TextAlign.Center,
-            fontSize = 20.sp,
-            modifier =  Modifier.padding(16.dp)
-        )
-        Button(onClick = {
-            val intentBrowserMain = Intent(Intent.ACTION_VIEW,
-                Uri.parse(API_MAIN_PAGE_URL))
-            context.startActivity(intentBrowserMain)
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        item {
+            Spacer(modifier = Modifier.padding(30.dp))
+            Text(
+                text = stringResource(R.string.wattsapp_uses_data_from_porssisahko_api_wich_provides_electricity_prices_in_finland),
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp,
+                modifier = Modifier.padding(16.dp)
             )
+            Button(onClick = {
+                val intentBrowserMain = Intent(Intent.ACTION_VIEW, Uri.parse(API_MAIN_PAGE_URL))
+                context.startActivity(intentBrowserMain)
+            },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             ) {
-            Text(text = stringResource(R.string.api_main_page_button))
-        }
-        Spacer(modifier = Modifier.padding(25.dp))
-        Text(
-            text = stringResource(R.string.the_latest_prices_are_available_in_json_format_tomorrows_prices_are_available_after_14_15),
-            textAlign = TextAlign.Center,
-            fontSize = 20.sp,
-            modifier =  Modifier.padding(16.dp)
-        )
-        Button(
-            onClick = {
-                val intentBrowserDataJSON = Intent(Intent.ACTION_VIEW, Uri.parse(BASE_URL + LATEST_PRICES_ENDPOINT))
-                context.startActivity(intentBrowserDataJSON)
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                Text(text = stringResource(R.string.api_main_page_button))
+            }
+            Spacer(modifier = Modifier.padding(25.dp))
+            Text(
+                text = stringResource(R.string.the_latest_prices_are_available_in_json_format_tomorrows_prices_are_available_after_14_15),
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp,
+                modifier = Modifier.padding(16.dp)
             )
-        ) {
-            Text(text = stringResource(R.string.data_in_json_button))
+            Button(
+                onClick = {
+                    val intentBrowserDataJSON = Intent(Intent.ACTION_VIEW, Uri.parse(BASE_URL + LATEST_PRICES_ENDPOINT))
+                    context.startActivity(intentBrowserDataJSON)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            ) {
+                Text(text = stringResource(R.string.data_in_json_button))
+            }
         }
-
     }
 }
 
@@ -903,53 +903,57 @@ fun Page3(navController: NavHostController) {
 fun Page4(navController: NavHostController, sharedPreferences: SharedPreferences, userName: String, onUserNameChange: (String) -> Unit) {
     var localUserName by remember { mutableStateOf(userName) }
 
-    Column(
+    LazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (userName.isNotEmpty()) {
-            Spacer(modifier = Modifier.padding(30.dp))
-            Text(text= "Not $userName?",
-                fontSize = 24.sp,
-                modifier =  Modifier.padding(16.dp)
-            )
-            Button(onClick = {
-                onUserNameChange("") // Delete the user name
-            }) {
-                Text("Delete user name")
+        item {
+            if (userName.isNotEmpty()) {
+                Spacer(modifier = Modifier.padding(30.dp))
+                Text(
+                    text = "Not $userName?",
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(16.dp)
+                )
+                Button(onClick = {
+                    onUserNameChange("") // Delete the user name
+                }) {
+                    Text("Delete user name")
+                }
+                Spacer(modifier = Modifier.padding(20.dp))
+                Text(
+                    text = "Or change the user name",
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(16.dp)
+                )
+                TextField(
+                    value = localUserName,
+                    onValueChange = { newValue ->
+                        localUserName = newValue
+                    },
+                    label = { Text("Name") }
+                )
+            } else {
+                Spacer(modifier = Modifier.padding(30.dp))
+                Text(
+                    text = "Who's using this app?",
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(16.dp)
+                )
+                TextField(
+                    value = localUserName,
+                    onValueChange = { newValue ->
+                        localUserName = newValue
+                    },
+                    label = { Text("Name") }
+                )
             }
-            Spacer(modifier = Modifier.padding(20.dp))
-            Text(text = "Or change the user name",
-                fontSize = 24.sp,
-                modifier =  Modifier.padding(16.dp)
-            )
-            TextField(
-                value = localUserName,
-                onValueChange = { newValue ->
-                    localUserName = newValue
-                },
-                label = { Text("Name") }
-            )
-        } else {
-        Spacer(modifier = Modifier.padding(30.dp))
-        Text(text = "Who's using this app?",
-            fontSize = 24.sp,
-            modifier =  Modifier.padding(16.dp)
-        )
-        TextField(
-            value = localUserName,
-            onValueChange = { newValue ->
-                localUserName = newValue
-            },
-            label = { Text("Name") }
-        )}
-        Spacer(modifier = Modifier.padding(16.dp))
-        Button(onClick = {
-            onUserNameChange(localUserName) // Save the user name
-        }) {
-            Text("Save")
+            Spacer(modifier = Modifier.padding(16.dp))
+            Button(onClick = {
+                onUserNameChange(localUserName) // Save the user name
+            }) {
+                Text("Save")
+            }
         }
-
-
     }
 }
