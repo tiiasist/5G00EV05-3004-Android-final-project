@@ -81,6 +81,7 @@ import com.example.wattsapp.ui.theme.primaryContainerLight
 import com.example.wattsapp.ui.theme.secondaryLight
 import android.content.SharedPreferences
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
@@ -184,20 +185,25 @@ fun TopBar(navController: NavHostController, sharedPreferences: SharedPreference
                     fontSize = 25.sp,
                     modifier = Modifier.padding(16.dp)
                 )
+                Spacer(modifier = Modifier.weight(1f))
                 Column(
                     horizontalAlignment = Alignment.End,
-                    modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 0.dp)
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(0.dp, 0.dp, 16.dp, 0.dp)
                 ) {
                     if (userName.isNotEmpty()) {
                         Icon(
                             Icons.Filled.Person,
                             contentDescription = "User",
                             tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.padding(end = 8.dp)
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .size(if (userName.length > 5) 12.dp else 24.dp)
                         )
                         Text(
                             text = userName,
-                            fontSize = 15.sp,
+                            fontSize = if (userName.length > 5) 10.sp else 15.sp,
+                            textAlign = TextAlign.Center
 
                         )
                     }
@@ -902,6 +908,7 @@ fun Page3(navController: NavHostController) {
 @Composable
 fun Page4(navController: NavHostController, sharedPreferences: SharedPreferences, userName: String, onUserNameChange: (String) -> Unit) {
     var localUserName by remember { mutableStateOf(userName) }
+    var errorMessage by remember { mutableStateOf("") }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -929,10 +936,22 @@ fun Page4(navController: NavHostController, sharedPreferences: SharedPreferences
                 TextField(
                     value = localUserName,
                     onValueChange = { newValue ->
-                        localUserName = newValue
+                        if (newValue.length <= 16) {
+                            localUserName = newValue
+                            errorMessage = ""
+                        } else {
+                            errorMessage = "Username cannot exceed 10 characters"
+                        }
                     },
                     label = { Text("Name") }
                 )
+                if (errorMessage.isNotEmpty()) {
+                    Text(
+                        text = errorMessage,
+                        color = Color.Red,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
             } else {
                 Spacer(modifier = Modifier.padding(30.dp))
                 Text(
@@ -943,14 +962,28 @@ fun Page4(navController: NavHostController, sharedPreferences: SharedPreferences
                 TextField(
                     value = localUserName,
                     onValueChange = { newValue ->
-                        localUserName = newValue
+                        if (newValue.length <= 16) {
+                            localUserName = newValue
+                            errorMessage = ""
+                        } else {
+                            errorMessage = "Username cannot exceed 10 characters"
+                        }
                     },
                     label = { Text("Name") }
                 )
+                if (errorMessage.isNotEmpty()) {
+                    Text(
+                        text = errorMessage,
+                        color = Color.Red,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
             }
             Spacer(modifier = Modifier.padding(16.dp))
             Button(onClick = {
-                onUserNameChange(localUserName) // Save the user name
+                if (localUserName.length <= 16) {
+                    onUserNameChange(localUserName) // Save the user name
+                }
             }) {
                 Text("Save")
             }
