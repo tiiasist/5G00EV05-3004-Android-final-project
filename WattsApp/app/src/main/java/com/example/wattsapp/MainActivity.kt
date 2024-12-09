@@ -35,7 +35,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.wattsapp.ui.theme.WattsAppTheme
 import android.net.Uri
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -43,13 +42,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.res.stringResource
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.getValue
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
@@ -69,8 +65,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -83,10 +77,14 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.wattsapp.ui.theme.errorContainerLight
-import com.example.wattsapp.ui.theme.primaryContainerDark
 import com.example.wattsapp.ui.theme.primaryContainerLight
-import com.example.wattsapp.ui.theme.primaryLight
 import com.example.wattsapp.ui.theme.secondaryLight
+import android.content.SharedPreferences
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBarDefaults
 import com.example.wattsapp.ui.theme.tertiaryContainerLight
 import kotlin.math.roundToInt
 import androidx.lifecycle.ViewModel
@@ -98,27 +96,40 @@ const val BASE_URL = "https://api.porssisahko.net/"
 const val LATEST_PRICES_ENDPOINT = "v1/latest-prices.json"
 const val API_MAIN_PAGE_URL = "https://www.porssisahko.net/api"
 
-
 class MainActivity : ComponentActivity() {
+    private lateinit var sharedPreferences: SharedPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE)
+
         enableEdgeToEdge()
         setContent {
             WattsAppTheme {
-                WattsApp()
+                var userName by remember { mutableStateOf(sharedPreferences.getString("user_name", "") ?: "") } // Read the user name from the shared preferences
+
+                WattsApp(
+                    sharedPreferences = sharedPreferences,
+                    userName = userName,
+                    onUserNameChange = { newUserName -> // Update the user name
+                        userName = newUserName
+                        sharedPreferences.edit().putString("user_name", newUserName).apply()
+                    }
+                )
             }
         }
     }
 }
 
+
 @Composable
-@Preview
-fun WattsApp() {
+fun WattsApp(sharedPreferences: SharedPreferences, userName: String, onUserNameChange: (String) -> Unit) {
     val navController = rememberNavController()
 
     Scaffold(
         topBar = {
-            TopBar(navController)
+            TopBar(navController, sharedPreferences)
         },
         bottomBar = {
             BottomNavigationBar(navController = navController)
@@ -138,15 +149,18 @@ fun WattsApp() {
                 composable("page3") {// Data
                     Page3(navController)
                 }
+                composable("page4") {// User
+                    Page4(navController, sharedPreferences, userName, onUserNameChange)
+                }
             }
         }
     )
-
 }
 
+// Top app bar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(navController: NavHostController) {
+fun TopBar(navController: NavHostController, sharedPreferences: SharedPreferences) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -156,23 +170,54 @@ fun TopBar(navController: NavHostController) {
         "page3" -> stringResource(R.string.title_data_page)
         else -> stringResource(R.string.app_name)
     }
+    val userName = sharedPreferences.getString("user_name", "") ?: ""
 
     TopAppBar(
         title = {
-            Text(text = title,
-                textAlign = TextAlign.Center,
-                fontSize = 30.sp,
-                modifier = Modifier.padding(16.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    textAlign = TextAlign.Center,
+                    fontSize = 25.sp,
+                    modifier = Modifier.padding(16.dp)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(0.dp, 0.dp, 16.dp, 0.dp)
+                ) {
+                    if (userName.isNotEmpty()) {
+                        Icon(
+                            Icons.Filled.Person,
+                            contentDescription = "User",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .size(if (userName.length > 5) 12.dp else 24.dp)
+                        )
+                        Text(
+                            text = userName,
+                            fontSize = if (userName.length > 5) 10.sp else 15.sp,
+                            textAlign = TextAlign.Center
+
+                        )
+                    }
+                }
+            }
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.inverseSurface,
             titleContentColor = MaterialTheme.colorScheme.surface
         )
     )
-
 }
 
+// Bottom navigation bar
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -227,6 +272,25 @@ fun BottomNavigationBar(navController: NavHostController) {
             selected = currentRoute == "page3",
             onClick = {
                 navController.navigate("page3") {
+                    popUpTo(navController.graph.startDestinationId) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                unselectedIconColor = MaterialTheme.colorScheme.surface
+            )
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Filled.Person, contentDescription = "User") },
+            label = { Text(stringResource(R.string.user_nav_button),
+                color = MaterialTheme.colorScheme.surface) },
+            selected = currentRoute == "page4",
+            onClick = {
+                navController.navigate("page4") {
                     popUpTo(navController.graph.startDestinationId) {
                         saveState = true
                     }
@@ -794,48 +858,135 @@ fun Page2(navController: NavHostController, viewModel: Page2ViewModel = viewMode
 fun Page3(navController: NavHostController) {
     val context = LocalContext.current
 
-    Column(
+    LazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.padding(30.dp))
-        Text(
-            text = stringResource(R.string.wattsapp_uses_data_from_porssisahko_api_wich_provides_electricity_prices_in_finland),
-            textAlign = TextAlign.Center,
-            fontSize = 20.sp,
-            modifier =  Modifier.padding(16.dp)
-        )
-        Button(onClick = {
-            val intentBrowserMain = Intent(Intent.ACTION_VIEW,
-                Uri.parse(API_MAIN_PAGE_URL))
-            context.startActivity(intentBrowserMain)
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        item {
+            Spacer(modifier = Modifier.padding(30.dp))
+            Text(
+                text = stringResource(R.string.wattsapp_uses_data_from_porssisahko_api_wich_provides_electricity_prices_in_finland),
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp,
+                modifier = Modifier.padding(16.dp)
             )
+            Button(onClick = {
+                val intentBrowserMain = Intent(Intent.ACTION_VIEW, Uri.parse(API_MAIN_PAGE_URL))
+                context.startActivity(intentBrowserMain)
+            },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             ) {
-            Text(text = stringResource(R.string.api_main_page_button))
-        }
-        Spacer(modifier = Modifier.padding(25.dp))
-        Text(
-            text = stringResource(R.string.the_latest_prices_are_available_in_json_format_tomorrows_prices_are_available_after_14_15),
-            textAlign = TextAlign.Center,
-            fontSize = 20.sp,
-            modifier =  Modifier.padding(16.dp)
-        )
-        Button(
-            onClick = {
-                val intentBrowserDataJSON = Intent(Intent.ACTION_VIEW, Uri.parse(BASE_URL + LATEST_PRICES_ENDPOINT))
-                context.startActivity(intentBrowserDataJSON)
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                Text(text = stringResource(R.string.api_main_page_button))
+            }
+            Spacer(modifier = Modifier.padding(25.dp))
+            Text(
+                text = stringResource(R.string.the_latest_prices_are_available_in_json_format_tomorrows_prices_are_available_after_14_15),
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp,
+                modifier = Modifier.padding(16.dp)
             )
-        ) {
-            Text(text = stringResource(R.string.data_in_json_button))
+            Button(
+                onClick = {
+                    val intentBrowserDataJSON = Intent(Intent.ACTION_VIEW, Uri.parse(BASE_URL + LATEST_PRICES_ENDPOINT))
+                    context.startActivity(intentBrowserDataJSON)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            ) {
+                Text(text = stringResource(R.string.data_in_json_button))
+            }
         }
+    }
+}
 
+// Fourth page for adding user name
+@Composable
+fun Page4(navController: NavHostController, sharedPreferences: SharedPreferences, userName: String, onUserNameChange: (String) -> Unit) {
+    var localUserName by remember { mutableStateOf(userName) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        item {
+            if (userName.isNotEmpty()) {
+                Spacer(modifier = Modifier.padding(30.dp))
+                Text(
+                    text = "Not $userName?",
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(16.dp)
+                )
+                Button(onClick = {
+                    onUserNameChange("") // Delete the user name
+                }) {
+                    Text("Delete user name")
+                }
+                Spacer(modifier = Modifier.padding(20.dp))
+                Text(
+                    text = "Or change the user name",
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(16.dp)
+                )
+                TextField(
+                    value = localUserName,
+                    onValueChange = { newValue ->
+                        if (newValue.length <= 16) {
+                            localUserName = newValue
+                            errorMessage = ""
+                        } else {
+                            errorMessage = "Username cannot exceed 10 characters"
+                        }
+                    },
+                    label = { Text("Name") }
+                )
+                if (errorMessage.isNotEmpty()) {
+                    Text(
+                        text = errorMessage,
+                        color = Color.Red,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.padding(30.dp))
+                Text(
+                    text = "Who's using this app?",
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(16.dp)
+                )
+                TextField(
+                    value = localUserName,
+                    onValueChange = { newValue ->
+                        if (newValue.length <= 16) {
+                            localUserName = newValue
+                            errorMessage = ""
+                        } else {
+                            errorMessage = "Username cannot exceed 10 characters"
+                        }
+                    },
+                    label = { Text("Name") }
+                )
+                if (errorMessage.isNotEmpty()) {
+                    Text(
+                        text = errorMessage,
+                        color = Color.Red,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.padding(16.dp))
+            Button(onClick = {
+                if (localUserName.length <= 16) {
+                    onUserNameChange(localUserName) // Save the user name
+                }
+            }) {
+                Text("Save")
+            }
+        }
     }
 }

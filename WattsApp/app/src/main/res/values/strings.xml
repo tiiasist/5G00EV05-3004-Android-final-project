@@ -10,4 +10,5 @@
     <string name="data_nav_button" translatable="false">Data</string>
     <string name="home_title">" Electricity price today"</string>
     <string name="calculator_page_title">" Count your electricity bill"</string>
+    <string name="user_nav_button">User</string>
 </resources>
