@@ -228,7 +228,7 @@ fun BottomNavigationBar(navController: NavHostController) {
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         NavigationBarItem(
-            icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
+            icon = { Icon(Icons.Filled.Home, contentDescription = stringResource(R.string.icon_home)) },
             label = { Text(stringResource(R.string.home_nav_button),
                 color = MaterialTheme.colorScheme.surface) },
             selected = currentRoute == "page1",
@@ -247,7 +247,10 @@ fun BottomNavigationBar(navController: NavHostController) {
             )
         )
         NavigationBarItem(
-            icon = { Icon(painter = painterResource(id = R.drawable.baseline_calculate_24), contentDescription = "Calculate") },
+            icon = { Icon(painter = painterResource(id = R.drawable.baseline_calculate_24), contentDescription = stringResource(
+                R.string.icon_calculate
+            )
+            ) },
             label = { Text(stringResource(R.string.counter_nav_button),
                 color = MaterialTheme.colorScheme.surface) },
             selected = currentRoute == "page2",
@@ -266,7 +269,10 @@ fun BottomNavigationBar(navController: NavHostController) {
             )
         )
         NavigationBarItem(
-            icon = { Icon(painter = painterResource(id = R.drawable.baseline_data_object_24), contentDescription = "Data") },
+            icon = { Icon(painter = painterResource(id = R.drawable.baseline_data_object_24), contentDescription = stringResource(
+                R.string.icon_data
+            )
+            ) },
             label = { Text(stringResource(R.string.data_nav_button),
                 color = MaterialTheme.colorScheme.surface) },
             selected = currentRoute == "page3",
@@ -285,7 +291,7 @@ fun BottomNavigationBar(navController: NavHostController) {
             )
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Filled.Person, contentDescription = "User") },
+            icon = { Icon(Icons.Filled.Person, contentDescription = stringResource(R.string.icon_user)) },
             label = { Text(stringResource(R.string.user_nav_button),
                 color = MaterialTheme.colorScheme.surface) },
             selected = currentRoute == "page4",
@@ -335,7 +341,7 @@ fun Page1(navController: NavHostController) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Loading price data...")
+            Text(text = stringResource(R.string.loading_price_data_text))
         }
     } else if (error != null) {
         Column(
@@ -356,7 +362,7 @@ fun Page1(navController: NavHostController) {
         ) {
             item{
                 Text(
-                    text = "Cents/kWh Prices",
+                    text = stringResource(R.string.cents_kwh_prices),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -380,7 +386,7 @@ fun Page1(navController: NavHostController) {
                             .background(MaterialTheme.colorScheme.tertiaryContainer)
                     ) {
                         Text(
-                            text = "Date",
+                            text = stringResource(R.string.date_title_price_column),
                             color = MaterialTheme.colorScheme.onTertiaryContainer,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
@@ -395,7 +401,7 @@ fun Page1(navController: NavHostController) {
                             .background(MaterialTheme.colorScheme.tertiaryContainer)
                     ) {
                         Text(
-                            text = "Time",
+                            text = stringResource(R.string.time_title_price_column),
                             color = MaterialTheme.colorScheme.onTertiaryContainer,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
@@ -410,7 +416,7 @@ fun Page1(navController: NavHostController) {
                             .background(MaterialTheme.colorScheme.tertiaryContainer)
                     ) {
                         Text(
-                            text = "Cents/kWh",
+                            text = stringResource(R.string.cents_kwh_title_price_column),
                             color = MaterialTheme.colorScheme.onTertiaryContainer,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
@@ -646,8 +652,8 @@ fun BarChart(prices: List<Price>) {
     ) {
         Text(
             text = selectedPrice?.let { (price, time, date) ->
-                "Selected Spot:\n$time $date\n$price cents/kWh"
-            } ?: "Current Spot:\n$currentTimeFormatted\n$currentPrice cents/kWh",
+                stringResource(R.string.selected_spot_cents_kwh, time, date, price)
+            } ?: stringResource(R.string.current_spot_cents_kwh, currentTimeFormatted, currentPrice),
             modifier = Modifier
                 .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp),
             style = MaterialTheme.typography.bodyLarge,
@@ -707,7 +713,7 @@ fun Page2(navController: NavHostController, viewModel: Page2ViewModel = viewMode
             OutlinedTextField(
                 value = viewModel.consumption,
                 onValueChange = { viewModel.consumption = it },
-                label = { Text("Energy Consumption (kWh / year)") },
+                label = { Text(stringResource(R.string.energy_consumption_kwh_year)) },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Done
@@ -723,7 +729,7 @@ fun Page2(navController: NavHostController, viewModel: Page2ViewModel = viewMode
             OutlinedTextField(
                 value = viewModel.fixedPrice,
                 onValueChange = { viewModel.fixedPrice = it },
-                label = { Text("Fixed Price (cents/kWh)") },
+                label = { Text(stringResource(R.string.fixed_price_cents_kwh)) },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Done
@@ -762,7 +768,7 @@ fun Page2(navController: NavHostController, viewModel: Page2ViewModel = viewMode
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Fixed price",
+                    text = stringResource(R.string.fixed_price_title),
                     style = MaterialTheme.typography.titleLarge.copy(textDecoration = TextDecoration.Underline),
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -770,15 +776,15 @@ fun Page2(navController: NavHostController, viewModel: Page2ViewModel = viewMode
                 Text(
                     text = buildAnnotatedString {
                         if (viewModel.consumption.isEmpty() || viewModel.fixedPrice.isEmpty()) {
-                            append("Input both values to calculate")
+                            append(stringResource(R.string.input_both_values_to_calculate))
                         } else if (viewModel.yearlyCost == null || viewModel.monthlyCost == null) {
-                            append("Invalid input values")
+                            append(stringResource(R.string.invalid_input_values))
                         } else {
-                            append("Yearly Cost: ")
+                            append(stringResource(R.string.yearly_cost))
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                                 append("${viewModel.roundedYearlyCost} €")
                             }
-                            append("\nMonthly Cost: ")
+                            append(stringResource(R.string.monthly_cost))
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                                 append("${viewModel.roundedMonthlyCost} €")
                             }
@@ -795,7 +801,7 @@ fun Page2(navController: NavHostController, viewModel: Page2ViewModel = viewMode
         item {
             // Display fetched data status and average price calculation
             if (viewModel.loading) {
-                Text(text = "Loading price data...", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                Text(text = stringResource(R.string.loading_price_data), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             } else if (viewModel.error != null) {
                 Text(text = "Error: ${viewModel.error}", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             } else {
@@ -818,29 +824,29 @@ fun Page2(navController: NavHostController, viewModel: Page2ViewModel = viewMode
                         .padding(16.dp)
                 ) {
                     Text(
-                        text = "Recent spot price",
+                        text = stringResource(R.string.recent_spot_price),
                         style = MaterialTheme.typography.titleLarge.copy(textDecoration = TextDecoration.Underline),
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text(
                         text = buildAnnotatedString {
-                            append("Average price from past few days:\n")
+                            append(stringResource(R.string.average_price_from_past_few_days))
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                                 append("$roundedAveragePrice €")
                             }
-                            append(" cents/kWh\n\n")
+                            append(stringResource(R.string.cents_kwh))
                             if (viewModel.consumption.isNotEmpty()) {
-                                append("Average Yearly Cost: ")
+                                append(stringResource(R.string.average_yearly_cost))
                                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                                     append("${viewModel.roundedAverageYearlyCost} €")
                                 }
-                                append("\nAverage Monthly Cost: ")
+                                append(stringResource(R.string.average_monthly_cost))
                                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                                     append("${viewModel.roundedAverageMonthlyCost} €")
                                 }
                             } else {
-                                append("Input your consumption to calculate average costs.")
+                                append(stringResource(R.string.input_your_consumption_to_calculate_average_costs))
                             }
                         },
                         textAlign = TextAlign.Center,
@@ -918,18 +924,18 @@ fun Page4(navController: NavHostController, sharedPreferences: SharedPreferences
             if (userName.isNotEmpty()) {
                 Spacer(modifier = Modifier.padding(30.dp))
                 Text(
-                    text = "Not $userName?",
+                    text = stringResource(R.string.not, userName),
                     fontSize = 24.sp,
                     modifier = Modifier.padding(16.dp)
                 )
                 Button(onClick = {
                     onUserNameChange("") // Delete the user name
                 }) {
-                    Text("Delete user name")
+                    Text(stringResource(R.string.delete_user_name))
                 }
                 Spacer(modifier = Modifier.padding(20.dp))
                 Text(
-                    text = "Or change the user name",
+                    text = stringResource(R.string.or_change_the_user_name),
                     fontSize = 24.sp,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -943,7 +949,7 @@ fun Page4(navController: NavHostController, sharedPreferences: SharedPreferences
                             errorMessage = "Username cannot exceed 10 characters"
                         }
                     },
-                    label = { Text("Name") }
+                    label = { Text(stringResource(R.string.name)) }
                 )
                 if (errorMessage.isNotEmpty()) {
                     Text(
@@ -955,7 +961,7 @@ fun Page4(navController: NavHostController, sharedPreferences: SharedPreferences
             } else {
                 Spacer(modifier = Modifier.padding(30.dp))
                 Text(
-                    text = "Who's using this app?",
+                    text = stringResource(R.string.who_s_using_this_app),
                     fontSize = 24.sp,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -969,7 +975,7 @@ fun Page4(navController: NavHostController, sharedPreferences: SharedPreferences
                             errorMessage = "Username cannot exceed 10 characters"
                         }
                     },
-                    label = { Text("Name") }
+                    label = { Text(stringResource(R.string.textfield_label_name_2)) }
                 )
                 if (errorMessage.isNotEmpty()) {
                     Text(
@@ -985,7 +991,7 @@ fun Page4(navController: NavHostController, sharedPreferences: SharedPreferences
                     onUserNameChange(localUserName) // Save the user name
                 }
             }) {
-                Text("Save")
+                Text(stringResource(R.string.save_button))
             }
         }
     }
