@@ -168,6 +168,7 @@ fun TopBar(navController: NavHostController, sharedPreferences: SharedPreference
         "page1" -> stringResource(R.string.home_title)
         "page2" -> stringResource(R.string.calculator_page_title)
         "page3" -> stringResource(R.string.title_data_page)
+        "page4" -> stringResource(R.string.title_user_page)
         else -> stringResource(R.string.app_name)
     }
     val userName = sharedPreferences.getString("user_name", "") ?: ""
@@ -181,9 +182,9 @@ fun TopBar(navController: NavHostController, sharedPreferences: SharedPreference
             ) {
                 Text(
                     text = title,
-                    textAlign = TextAlign.Center,
+                    textAlign = TextAlign.Start,
                     fontSize = 25.sp,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(start= 8.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Column(
@@ -531,6 +532,7 @@ fun BarChart(prices: List<Price>) {
         priceTime.isAfter(startTime) && priceTime.isBefore(endTime)
     }.sortedBy { ZonedDateTime.parse(it.startDate) }
     val maxPrice = filteredPrices.maxOfOrNull { it.price } ?: 0.0
+    val minPrice = filteredPrices.minOfOrNull { it.price } ?: 0.0
     var selectedPrice by remember { mutableStateOf<Triple<Double, String, String>?>(null) }
     val currentTimeFormatted = currentTime.format(DateTimeFormatter.ofPattern("HH:mm dd.MM.yyyy"))
     val currentPrice = filteredPrices.find { ZonedDateTime.parse(it.startDate).hour == currentTime.hour }?.price ?: 0.0
@@ -556,12 +558,13 @@ fun BarChart(prices: List<Price>) {
     ) {
         val gap = 8.dp.toPx()
         val barWidth = (size.width - gap * (filteredPrices.size - 1)) / filteredPrices.size
-        val yAxisInterval = maxPrice / 5
+        val yAxisInterval = (maxPrice - minPrice) / 5
         val cornerRadius = 3.dp.toPx()
+        val zeroLine = size.height * (maxPrice / (maxPrice - minPrice)).toFloat()
 
         // Draw the bars first
         filteredPrices.forEachIndexed { index, price ->
-            val barHeight = (price.price / maxPrice * size.height).toFloat()
+            val barHeight = ((price.price / (maxPrice - minPrice)) * size.height).toFloat()
             val xOffset = index * (barWidth + gap)
             var barColor = when {
                 price.price < 7 -> errorContainerLight
@@ -578,7 +581,7 @@ fun BarChart(prices: List<Price>) {
             // Draw the filled bar with rounded corners
             drawRoundRect(
                 color = barColor,
-                topLeft = androidx.compose.ui.geometry.Offset(xOffset, size.height - barHeight),
+                topLeft = androidx.compose.ui.geometry.Offset(xOffset, zeroLine - barHeight),
                 size = androidx.compose.ui.geometry.Size(barWidth, barHeight),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius, cornerRadius)
             )
@@ -587,7 +590,7 @@ fun BarChart(prices: List<Price>) {
             if (priceTime.hour == currentTime.hour) {
                 drawRoundRect(
                     color = Color.Black,
-                    topLeft = androidx.compose.ui.geometry.Offset(xOffset, size.height - barHeight),
+                    topLeft = androidx.compose.ui.geometry.Offset(xOffset, zeroLine - barHeight),
                     size = androidx.compose.ui.geometry.Size(barWidth, barHeight),
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius, cornerRadius),
                     style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
@@ -609,17 +612,17 @@ fun BarChart(prices: List<Price>) {
 
         // Draw y-axis help lines and labels centered to the lines
         for (i in 0..5) {
-            val y = size.height - (i * yAxisInterval / maxPrice * size.height).toFloat()
+            val y = size.height - ((i * yAxisInterval - minPrice) / (maxPrice - minPrice) * size.height).toFloat()
             drawLine(
                 color = Color.Gray,
                 start = androidx.compose.ui.geometry.Offset(0f, y),
                 end = androidx.compose.ui.geometry.Offset(size.width, y),
                 strokeWidth = 1.dp.toPx()
             )
-            val label = if (maxPrice >= 10) {
-                String.format("%.0f", i * yAxisInterval)
-            } else {
-                String.format("%.1f", i * yAxisInterval)
+            val label = when {
+                minPrice + i * yAxisInterval == 0.0 -> "0"
+                maxPrice >= 10 -> String.format("%.0f", minPrice + i * yAxisInterval)
+                else -> String.format("%.1f", minPrice + i * yAxisInterval)
             }
             drawContext.canvas.nativeCanvas.drawText(
                 label,
@@ -833,7 +836,7 @@ fun Page2(navController: NavHostController, viewModel: Page2ViewModel = viewMode
                         text = buildAnnotatedString {
                             append(stringResource(R.string.average_price_from_past_few_days))
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                append("$roundedAveragePrice €")
+                                append("$roundedAveragePrice ")
                             }
                             append(stringResource(R.string.cents_kwh))
                             if (viewModel.consumption.isNotEmpty()) {
