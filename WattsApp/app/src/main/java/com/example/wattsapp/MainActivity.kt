@@ -96,6 +96,25 @@ const val BASE_URL = "https://api.porssisahko.net/"
 const val LATEST_PRICES_ENDPOINT = "v1/latest-prices.json"
 const val API_MAIN_PAGE_URL = "https://www.porssisahko.net/api"
 
+
+val dummyPrices = listOf(
+    Price(3.533, "2024-12-12T22:00:00.000Z", "2024-12-12T23:00:00.000Z"),
+    Price(-6.333, "2024-12-12T21:00:00.000Z", "2024-12-12T22:00:00.000Z"),
+    Price(0.0, "2024-12-12T20:00:00.000Z", "2024-12-12T21:00:00.000Z"),
+    Price(8.757, "2024-12-12T19:00:00.000Z", "2024-12-12T20:00:00.000Z"),
+    Price(-10.58, "2024-12-12T18:00:00.000Z", "2024-12-12T19:00:00.000Z"),
+    Price(14.761, "2024-12-12T17:00:00.000Z", "2024-12-12T18:00:00.000Z"),
+    Price(0.0, "2024-12-12T16:00:00.000Z", "2024-12-12T17:00:00.000Z"),
+    Price(25.104, "2024-12-12T15:00:00.000Z", "2024-12-12T16:00:00.000Z"),
+    Price(-28.118, "2024-12-12T14:00:00.000Z", "2024-12-12T15:00:00.000Z"),
+    Price(20.541, "2024-12-12T13:00:00.000Z", "2024-12-12T14:00:00.000Z"),
+    Price(14.761, "2024-12-12T12:00:00.000Z", "2024-12-12T13:00:00.000Z"),
+    Price(0.0, "2024-12-12T11:00:00.000Z", "2024-12-12T12:00:00.000Z"),
+    Price(25.104, "2024-12-12T10:00:00.000Z", "2024-12-12T11:00:00.000Z"),
+    Price(-28.118, "2024-12-12T09:00:00.000Z", "2024-12-12T10:00:00.000Z"),
+    Price(20.541, "2024-12-12T08:00:00.000Z", "2024-12-12T09:00:00.000Z")
+)
+
 class MainActivity : ComponentActivity() {
     private lateinit var sharedPreferences: SharedPreferences
 
@@ -328,6 +347,7 @@ fun Page1(navController: NavHostController) {
             try {
                 val response = RetrofitInstance.api.getPrices()
                 prices = response.prices
+                prices = dummyPrices
                 loading = false
             } catch (e: Exception) {
                 error = e.message
@@ -365,11 +385,16 @@ fun Page1(navController: NavHostController) {
                 Text(
                     text = stringResource(R.string.cents_kwh_prices),
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 32.dp)
                 )
-
+            }
+            item{
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+            item{
                 BarChart(prices = prices)
-
+            }
+            item{
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
@@ -536,11 +561,12 @@ fun BarChart(prices: List<Price>) {
     var selectedPrice by remember { mutableStateOf<Triple<Double, String, String>?>(null) }
     val currentTimeFormatted = currentTime.format(DateTimeFormatter.ofPattern("HH:mm dd.MM.yyyy"))
     val currentPrice = filteredPrices.find { ZonedDateTime.parse(it.startDate).hour == currentTime.hour }?.price ?: 0.0
+    val chartHeight = 200.dp
 
     Canvas(modifier = Modifier
         .padding(start = 40.dp, top = 16.dp, end = 16.dp, bottom = 32.dp)
         .fillMaxWidth()
-        .height(200.dp)
+        .height(chartHeight)
         .pointerInput(Unit) {
             detectTapGestures { offset ->
                 val gap = 4.dp.toPx()
@@ -558,7 +584,7 @@ fun BarChart(prices: List<Price>) {
     ) {
         val gap = 8.dp.toPx()
         val barWidth = (size.width - gap * (filteredPrices.size - 1)) / filteredPrices.size
-        val yAxisInterval = (maxPrice - minPrice) / 5
+        val yAxisInterval = (maxPrice) / 5
         val cornerRadius = 3.dp.toPx()
         val zeroLine = size.height * (maxPrice / (maxPrice - minPrice)).toFloat()
 
@@ -611,7 +637,7 @@ fun BarChart(prices: List<Price>) {
         }
 
         // Draw y-axis help lines and labels centered to the lines
-        for (i in 0..5) {
+        for (i in -5..5) {
             val y = size.height - ((i * yAxisInterval - minPrice) / (maxPrice - minPrice) * size.height).toFloat()
             drawLine(
                 color = Color.Gray,
@@ -620,10 +646,11 @@ fun BarChart(prices: List<Price>) {
                 strokeWidth = 1.dp.toPx()
             )
             val label = when {
-                minPrice + i * yAxisInterval == 0.0 -> "0"
-                maxPrice >= 10 -> String.format("%.0f", minPrice + i * yAxisInterval)
-                else -> String.format("%.1f", minPrice + i * yAxisInterval)
+                0 + i * yAxisInterval == 0.0 -> "0"
+                maxPrice >= 10 -> String.format("%.0f", 0 + i * yAxisInterval)
+                else -> String.format("%.1f", 0 + i * yAxisInterval)
             }
+
             drawContext.canvas.nativeCanvas.drawText(
                 label,
                 -90f,
@@ -637,16 +664,6 @@ fun BarChart(prices: List<Price>) {
         }
     }
 
-//    Text(
-//        text = "CURRENT: $currentTime",
-//        modifier = Modifier
-//            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)
-//            .fillMaxWidth(),
-//        style = MaterialTheme.typography.bodyLarge,
-//        textAlign = TextAlign.Center
-//    )
-
-    // Display selected price, time, and date or current time and price if no spot is selected
     Box(
         modifier = Modifier
             .border(2.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
