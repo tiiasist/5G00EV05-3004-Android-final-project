@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -59,7 +58,6 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ButtonDefaults
@@ -75,7 +73,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.dp
 import com.example.wattsapp.ui.theme.errorContainerLight
 import com.example.wattsapp.ui.theme.primaryContainerLight
 import com.example.wattsapp.ui.theme.secondaryLight
@@ -85,11 +82,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
-import com.example.wattsapp.ui.theme.tertiaryContainerLight
-import kotlin.math.roundToInt
+import androidx.compose.ui.unit.times
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 const val BASE_URL = "https://api.porssisahko.net/"
@@ -98,21 +93,57 @@ const val API_MAIN_PAGE_URL = "https://www.porssisahko.net/api"
 
 
 val dummyPrices = listOf(
+    Price(5.874, "2024-12-13T07:00:00.000Z", "2024-12-13T08:00:00.000Z"),
+    Price(9.457, "2024-12-13T06:00:00.000Z", "2024-12-13T07:00:00.000Z"),
+    Price(0.2, "2024-12-13T05:00:00.000Z", "2024-12-13T06:00:00.000Z"),
+    Price(10.899, "2024-12-13T04:00:00.000Z", "2024-12-13T05:00:00.000Z"),
+    Price(3.172, "2024-12-13T03:00:00.000Z", "2024-12-13T04:00:00.000Z"),
+    Price(11.0, "2024-12-13T02:00:00.000Z", "2024-12-13T03:00:00.000Z"),
+    Price(0.2, "2024-12-13T01:00:00.000Z", "2024-12-13T02:00:00.000Z"),
+    Price(9.113, "2024-12-13T00:00:00.000Z", "2024-12-13T01:00:00.000Z"),
+    Price(3.533, "2024-12-12T23:00:00.000Z", "2024-12-13T00:00:00.000Z"),
     Price(3.533, "2024-12-12T22:00:00.000Z", "2024-12-12T23:00:00.000Z"),
-    Price(-6.333, "2024-12-12T21:00:00.000Z", "2024-12-12T22:00:00.000Z"),
+    Price(-26.333, "2024-12-12T21:00:00.000Z", "2024-12-12T22:00:00.000Z"),
     Price(0.0, "2024-12-12T20:00:00.000Z", "2024-12-12T21:00:00.000Z"),
     Price(8.757, "2024-12-12T19:00:00.000Z", "2024-12-12T20:00:00.000Z"),
     Price(-10.58, "2024-12-12T18:00:00.000Z", "2024-12-12T19:00:00.000Z"),
     Price(14.761, "2024-12-12T17:00:00.000Z", "2024-12-12T18:00:00.000Z"),
     Price(0.0, "2024-12-12T16:00:00.000Z", "2024-12-12T17:00:00.000Z"),
     Price(25.104, "2024-12-12T15:00:00.000Z", "2024-12-12T16:00:00.000Z"),
-    Price(-28.118, "2024-12-12T14:00:00.000Z", "2024-12-12T15:00:00.000Z"),
+    Price(-128.118, "2024-12-12T14:00:00.000Z", "2024-12-12T15:00:00.000Z"),
     Price(20.541, "2024-12-12T13:00:00.000Z", "2024-12-12T14:00:00.000Z"),
     Price(14.761, "2024-12-12T12:00:00.000Z", "2024-12-12T13:00:00.000Z"),
     Price(0.0, "2024-12-12T11:00:00.000Z", "2024-12-12T12:00:00.000Z"),
     Price(25.104, "2024-12-12T10:00:00.000Z", "2024-12-12T11:00:00.000Z"),
     Price(-28.118, "2024-12-12T09:00:00.000Z", "2024-12-12T10:00:00.000Z"),
     Price(20.541, "2024-12-12T08:00:00.000Z", "2024-12-12T09:00:00.000Z")
+)
+
+val dummyPrices2 = listOf(
+    Price(3.85, "2024-12-13T07:00:00.000Z", "2024-12-13T08:00:00.000Z"),
+    Price(4.72, "2024-12-13T06:00:00.000Z", "2024-12-13T07:00:00.000Z"),
+    Price(3.45, "2024-12-13T05:00:00.000Z", "2024-12-13T06:00:00.000Z"),
+    Price(5.03, "2024-12-13T04:00:00.000Z", "2024-12-13T05:00:00.000Z"),
+    Price(3.62, "2024-12-13T03:00:00.000Z", "2024-12-13T04:00:00.000Z"),
+    Price(5.2, "2024-12-13T02:00:00.000Z", "2024-12-13T03:00:00.000Z"),
+    Price(3.45, "2024-12-13T01:00:00.000Z", "2024-12-13T02:00:00.000Z"),
+    Price(4.64, "2024-12-13T00:00:00.000Z", "2024-12-13T01:00:00.000Z"),
+    Price(3.85, "2024-12-12T23:00:00.000Z", "2024-12-13T00:00:00.000Z"),
+    Price(3.85, "2024-12-12T22:00:00.000Z", "2024-12-12T23:00:00.000Z"),
+    Price(3.45, "2024-12-12T21:00:00.000Z", "2024-12-12T22:00:00.000Z"),
+    Price(3.45, "2024-12-12T20:00:00.000Z", "2024-12-12T21:00:00.000Z"),
+    Price(4.38, "2024-12-12T19:00:00.000Z", "2024-12-12T20:00:00.000Z"),
+    Price(3.45, "2024-12-12T18:00:00.000Z", "2024-12-12T19:00:00.000Z"),
+    Price(4.92, "2024-12-12T17:00:00.000Z", "2024-12-12T18:00:00.000Z"),
+    Price(3.45, "2024-12-12T16:00:00.000Z", "2024-12-12T17:00:00.000Z"),
+    Price(5.08, "2024-12-12T15:00:00.000Z", "2024-12-12T16:00:00.000Z"),
+    Price(3.45, "2024-12-12T14:00:00.000Z", "2024-12-12T15:00:00.000Z"),
+    Price(4.85, "2024-12-12T13:00:00.000Z", "2024-12-12T14:00:00.000Z"),
+    Price(4.92, "2024-12-12T12:00:00.000Z", "2024-12-12T13:00:00.000Z"),
+    Price(3.45, "2024-12-12T11:00:00.000Z", "2024-12-12T12:00:00.000Z"),
+    Price(5.08, "2024-12-12T10:00:00.000Z", "2024-12-12T11:00:00.000Z"),
+    Price(3.45, "2024-12-12T09:00:00.000Z", "2024-12-12T10:00:00.000Z"),
+    Price(4.85, "2024-12-12T08:00:00.000Z", "2024-12-12T09:00:00.000Z")
 )
 
 class MainActivity : ComponentActivity() {
@@ -160,16 +191,16 @@ fun WattsApp(sharedPreferences: SharedPreferences, userName: String, onUserNameC
                 modifier = Modifier.padding(innerPadding) // Apply the innerPadding here
             ) {
                 composable("page1") {// Home
-                    Page1(navController)
+                    Page1()
                 }
                 composable("page2") {// Calculator
-                    Page2(navController)
+                    Page2()
                 }
                 composable("page3") {// Data
-                    Page3(navController)
+                    Page3()
                 }
                 composable("page4") {// User
-                    Page4(navController, sharedPreferences, userName, onUserNameChange)
+                    Page4( userName, onUserNameChange)
                 }
             }
         }
@@ -335,7 +366,7 @@ fun BottomNavigationBar(navController: NavHostController) {
 // First page for home screen
 @SuppressLint("DefaultLocale")
 @Composable
-fun Page1(navController: NavHostController) {
+fun Page1() {
 
     var prices: List<Price> by remember { mutableStateOf(emptyList()) }
     var loading by remember { mutableStateOf(true) }
@@ -347,7 +378,7 @@ fun Page1(navController: NavHostController) {
             try {
                 val response = RetrofitInstance.api.getPrices()
                 prices = response.prices
-                prices = dummyPrices
+                //prices = dummyPrices
                 loading = false
             } catch (e: Exception) {
                 error = e.message
@@ -385,11 +416,11 @@ fun Page1(navController: NavHostController) {
                 Text(
                     text = stringResource(R.string.cents_kwh_prices),
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 32.dp)
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp)
                 )
             }
             item{
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
             }
             item{
                 BarChart(prices = prices)
@@ -561,12 +592,14 @@ fun BarChart(prices: List<Price>) {
     var selectedPrice by remember { mutableStateOf<Triple<Double, String, String>?>(null) }
     val currentTimeFormatted = currentTime.format(DateTimeFormatter.ofPattern("HH:mm dd.MM.yyyy"))
     val currentPrice = filteredPrices.find { ZonedDateTime.parse(it.startDate).hour == currentTime.hour }?.price ?: 0.0
-    val chartHeight = 200.dp
+
+    // Calculate the maximum bar height based on the maximum price
+    val maxBarHeight = (maxPrice - minPrice).toFloat() * 10.dp
 
     Canvas(modifier = Modifier
         .padding(start = 40.dp, top = 16.dp, end = 16.dp, bottom = 32.dp)
         .fillMaxWidth()
-        .height(chartHeight)
+        .height(maxBarHeight)
         .pointerInput(Unit) {
             detectTapGestures { offset ->
                 val gap = 4.dp.toPx()
@@ -637,7 +670,7 @@ fun BarChart(prices: List<Price>) {
         }
 
         // Draw y-axis help lines and labels centered to the lines
-        for (i in -5..5) {
+        for (i in 0..5) {
             val y = size.height - ((i * yAxisInterval - minPrice) / (maxPrice - minPrice) * size.height).toFloat()
             drawLine(
                 color = Color.Gray,
@@ -664,6 +697,8 @@ fun BarChart(prices: List<Price>) {
         }
     }
 
+    Spacer(modifier = Modifier.height(16.dp))
+
     Box(
         modifier = Modifier
             .border(2.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
@@ -681,7 +716,6 @@ fun BarChart(prices: List<Price>) {
         )
     }
 }
-
 
 // Second page for calculation of electricity bill
 class Page2ViewModel : ViewModel() {
@@ -717,8 +751,9 @@ class Page2ViewModel : ViewModel() {
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
-fun Page2(navController: NavHostController, viewModel: Page2ViewModel = viewModel()) {
+fun Page2( viewModel: Page2ViewModel = viewModel()) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
     LazyColumn(
@@ -881,7 +916,7 @@ fun Page2(navController: NavHostController, viewModel: Page2ViewModel = viewMode
 
 
 @Composable
-fun Page3(navController: NavHostController) {
+fun Page3() {
     val context = LocalContext.current
 
     LazyColumn(
@@ -932,7 +967,7 @@ fun Page3(navController: NavHostController) {
 
 // Fourth page for adding user name
 @Composable
-fun Page4(navController: NavHostController, sharedPreferences: SharedPreferences, userName: String, onUserNameChange: (String) -> Unit) {
+fun Page4(userName: String, onUserNameChange: (String) -> Unit) {
     var localUserName by remember { mutableStateOf(userName) }
     var errorMessage by remember { mutableStateOf("") }
 
